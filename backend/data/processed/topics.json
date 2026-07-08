@@ -1,0 +1,206 @@
+[
+  {
+    "topic_id": 0,
+    "label": "Service & Staff",
+    "top_terms": [
+      "amazing",
+      "service",
+      "delicious",
+      "recommend",
+      "pizza",
+      "friendly",
+      "breakfast",
+      "highly",
+      "love",
+      "staff"
+    ],
+    "review_count": 9713
+  },
+  {
+    "topic_id": 1,
+    "label": "Pizza & Italian",
+    "top_terms": [
+      "chicken",
+      "shrimp",
+      "fried",
+      "sauce",
+      "rice",
+      "dish",
+      "spicy",
+      "oysters",
+      "fish",
+      "star"
+    ],
+    "review_count": 3727
+  },
+  {
+    "topic_id": 2,
+    "label": "Wait Times & Reservations",
+    "top_terms": [
+      "cheese",
+      "try",
+      "hot",
+      "meat",
+      "sandwich",
+      "line",
+      "mac",
+      "potatoes",
+      "chicken",
+      "mac cheese"
+    ],
+    "review_count": 5274
+  },
+  {
+    "topic_id": 3,
+    "label": "Burgers & Bar Food",
+    "top_terms": [
+      "fries",
+      "burger",
+      "sweet",
+      "delicious",
+      "nice",
+      "pork",
+      "sauce",
+      "cheese",
+      "flavor",
+      "cooked"
+    ],
+    "review_count": 3997
+  },
+  {
+    "topic_id": 4,
+    "label": "Service / People / Said",
+    "top_terms": [
+      "service",
+      "people",
+      "said",
+      "manager",
+      "know",
+      "customer",
+      "asked",
+      "bad",
+      "going",
+      "eat"
+    ],
+    "review_count": 6059
+  },
+  {
+    "topic_id": 5,
+    "label": "Table / Wait / Minutes",
+    "top_terms": [
+      "table",
+      "wait",
+      "minutes",
+      "server",
+      "took",
+      "seated",
+      "busy",
+      "waiting",
+      "waited",
+      "asked"
+    ],
+    "review_count": 3954
+  },
+  {
+    "topic_id": 6,
+    "label": "Menu / Staff / Friendly",
+    "top_terms": [
+      "menu",
+      "staff",
+      "friendly",
+      "love",
+      "little",
+      "nice",
+      "favorite",
+      "new",
+      "parking",
+      "experience"
+    ],
+    "review_count": 6061
+  },
+  {
+    "topic_id": 7,
+    "label": "Ambiance & Decor",
+    "top_terms": [
+      "beer",
+      "seating",
+      "bar",
+      "outside",
+      "outdoor",
+      "area",
+      "nice",
+      "inside",
+      "patio",
+      "tables"
+    ],
+    "review_count": 2520
+  },
+  {
+    "topic_id": 8,
+    "label": "BBQ & Meats",
+    "top_terms": [
+      "best",
+      "tacos",
+      "amazing",
+      "bbq",
+      "st",
+      "favorite",
+      "love",
+      "town",
+      "far",
+      "philly"
+    ],
+    "review_count": 2779
+  },
+  {
+    "topic_id": 9,
+    "label": "Sushi & Japanese",
+    "top_terms": [
+      "service",
+      "sushi",
+      "roll",
+      "lunch",
+      "dessert",
+      "cream",
+      "quality",
+      "excellent",
+      "lobster",
+      "ice"
+    ],
+    "review_count": 1462
+  },
+  {
+    "topic_id": 10,
+    "label": "Drinks & Cocktails",
+    "top_terms": [
+      "dinner",
+      "night",
+      "bar",
+      "experience",
+      "drinks",
+      "wine",
+      "menu",
+      "room",
+      "server",
+      "drink"
+    ],
+    "review_count": 3497
+  },
+  {
+    "topic_id": 11,
+    "label": "Value & Pricing",
+    "top_terms": [
+      "salad",
+      "happy",
+      "chips",
+      "hour",
+      "portion",
+      "salsa",
+      "happy hour",
+      "fish",
+      "fresh",
+      "red"
+    ],
+    "review_count": 1357
+  }
+]

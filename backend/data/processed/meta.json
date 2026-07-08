@@ -1,0 +1,26 @@
+{
+  "source": "Yelp Open Dataset (via Hugging Face mirrors)",
+  "business_source": "yashraizada/yelp-open-dataset-business",
+  "review_source": "seansanchez951/yelp_academic_dataset_review",
+  "restaurants": 360,
+  "reviews": 50400,
+  "cities": 82,
+  "states": 14,
+  "date_range": [
+    "2015-09-10",
+    "2022-01-19"
+  ],
+  "sentiment_model": "VADER (vaderSentiment)",
+  "topic_model": "sklearn LDA, 12 topics",
+  "aspects": [
+    "food",
+    "service",
+    "price",
+    "ambiance"
+  ],
+  "sampling": {
+    "min_reviews_per_restaurant": 100,
+    "per_city_cap": 22,
+    "reviews_per_restaurant": 140
+  }
+}

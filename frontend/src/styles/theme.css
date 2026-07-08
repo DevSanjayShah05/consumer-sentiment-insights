@@ -1,0 +1,123 @@
+/* ============================================================================
+   Tablecloth design tokens
+   A warm, editorial/magazine palette — deliberately the opposite of a dark
+   analytics dashboard. Serif display type for headlines, generous whitespace,
+   warm neutrals. Categorical + sequential + diverging slots below were run
+   through the data-viz palette validator (six-check CVD/contrast script)
+   before being adopted; see README "Design system" section.
+   ========================================================================== */
+
+:root {
+  /* ---- surfaces & ink (light, primary mode) ---- */
+  --page: #faf5ee;
+  --surface: #fffbf5;
+  --surface-raised: #ffffff;
+  --ink: #2b2420;
+  --ink-secondary: #6b5f52;
+  --ink-muted: #9c8f7f;
+  --hairline: #e8ddcc;
+  --hairline-strong: #d9cab0;
+  --ring: rgba(43, 36, 32, 0.10);
+
+  /* ---- brand accent ---- */
+  --brand: #c1502e;
+  --brand-ink: #ffffff;
+  --brand-tint: #f6ded4;
+  --brand-tint-strong: #eebfab;
+
+  /* ---- categorical: aspects (fixed order — validated, never cycled) ---- */
+  --aspect-food: #c1502e;      /* rust   */
+  --aspect-service: #c9861a;   /* gold   */
+  --aspect-price: #8a2f5e;     /* plum   */
+  --aspect-ambiance: #3f7d3a;  /* green  */
+
+  /* ---- sequential: single-hue magnitude ramp (rust, light -> dark) ---- */
+  --seq-100: #f6ded4;
+  --seq-200: #eebfab;
+  --seq-300: #e2946f;
+  --seq-400: #d06f45;
+  --seq-500: #c1502e;
+  --seq-600: #9c3f24;
+  --seq-700: #7a331e;
+
+  /* ---- diverging: discrepancy (warm = text warmer than stars,
+         cool = text harsher than stars), neutral warm-gray midpoint ---- */
+  --div-warm: #c1502e;
+  --div-warm-tint: #f0c9b8;
+  --div-cool: #3a5a78;
+  --div-cool-tint: #c7d5e0;
+  --div-mid: #efe6d8;
+
+  /* ---- status (fixed, reserved — not reused for series) ---- */
+  --status-good: #0ca30c;
+  --status-warning: #b8860b;
+  --status-critical: #d03b3b;
+
+  /* ---- chart chrome ---- */
+  --grid: #e8ddcc;
+  --axis: #cabfa9;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --shadow-card: 0 1px 2px rgba(43, 36, 32, 0.04), 0 8px 24px -12px rgba(43, 36, 32, 0.18);
+  --shadow-hover: 0 4px 10px rgba(43, 36, 32, 0.06), 0 16px 36px -14px rgba(43, 36, 32, 0.24);
+
+  --font-serif: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-sans: "Inter", -apple-system, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #191410;
+    --surface: #221b16;
+    --surface-raised: #271f19;
+    --ink: #f5ede1;
+    --ink-secondary: #cabfaf;
+    --ink-muted: #93887a;
+    --hairline: #3a2f26;
+    --hairline-strong: #4a3c30;
+    --ring: rgba(255, 255, 255, 0.10);
+
+    --brand: #e2703f;
+    --brand-ink: #1c1613;
+    --brand-tint: #3a291f;
+    --brand-tint-strong: #5c3e2b;
+
+    --aspect-food: #d9743f;
+    --aspect-service: #c2871f;
+    --aspect-price: #b8628f;
+    --aspect-ambiance: #5f9a48;
+
+    --seq-100: #3a291f;
+    --seq-200: #5c3e2b;
+    --seq-300: #86532f;
+    --seq-400: #b06336;
+    --seq-500: #d9743f;
+    --seq-600: #e2955f;
+    --seq-700: #ecb388;
+
+    --div-warm: #e2703f;
+    --div-warm-tint: #5c3e2b;
+    --div-cool: #7ea3c4;
+    --div-cool-tint: #253747;
+    --div-mid: #382f26;
+
+    --status-good: #34c759;
+    --status-warning: #e0a831;
+    --status-critical: #e5605a;
+
+    --grid: #362b22;
+    --axis: #4a3c30;
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+    --shadow-hover: 0 4px 10px rgba(0, 0, 0, 0.35), 0 16px 36px -14px rgba(0, 0, 0, 0.6);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+}
