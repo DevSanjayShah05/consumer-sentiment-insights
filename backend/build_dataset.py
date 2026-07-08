@@ -23,6 +23,7 @@ import numpy as np
 import pandas as pd
 
 from analysis import aspects, discrepancy, sentiment, topics
+from build_nyc_dataset import load_nyc
 
 HERE = Path(__file__).parent
 RAW = HERE / "data" / "raw"
@@ -36,6 +37,15 @@ REVIEWS_PER_RESTAURANT = 140       # most-recent reviews kept per restaurant
 TEXT_TRUNCATE = 700                # chars of review text committed to the repo
 N_TOPICS = 12
 RANDOM_STATE = 42
+
+YELP_SOURCE = "yelp_open_dataset"
+
+# Columns each source contributes so both slices can be concatenated and run
+# through the identical scoring / topic / aggregation pipeline.
+REV_COLS = ["review_id", "business_id", "date", "stars", "text", "useful", "data_source"]
+CHOSEN_COLS = ["business_id", "name", "city", "state", "postal_code", "latitude",
+               "longitude", "categories", "stars", "review_count",
+               "sampled_reviews", "data_source"]
 
 _WS = re.compile(r"\s+")
 
@@ -58,9 +68,9 @@ def select_restaurants(biz: pd.DataFrame, rev: pd.DataFrame) -> pd.DataFrame:
     return cand.reset_index(drop=True)
 
 
-def main() -> None:
-    OUT.mkdir(parents=True, exist_ok=True)
-    print("Loading raw data ...")
+def build_yelp() -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Yelp Open Dataset slice: (chosen restaurants, most-recent-N reviews)."""
+    print("Loading raw Yelp data ...")
     biz = pd.read_parquet(RAW / "business.parquet")
     biz = biz[biz["categories"].fillna("").str.contains("Restaurants", case=False)]
     rev = pd.read_parquet(RAW / "rest_reviews_subset.parquet")
@@ -68,15 +78,41 @@ def main() -> None:
     rev = rev[rev["text"].str.len() >= 40]
 
     chosen = select_restaurants(biz, rev)
+    chosen["data_source"] = YELP_SOURCE
     chosen_ids = set(chosen["business_id"])
-    print(f"Selected {len(chosen)} restaurants across {chosen['city'].nunique()} cities / "
-          f"{chosen['state'].nunique()} states.")
+    print(f"  [yelp] selected {len(chosen)} restaurants across {chosen['city'].nunique()} "
+          f"cities / {chosen['state'].nunique()} states.")
 
     # Keep the most-recent N reviews per chosen restaurant.
     rev = rev[rev["business_id"].isin(chosen_ids)].copy()
     rev["date"] = pd.to_datetime(rev["date"])
     rev = rev.sort_values("date").groupby("business_id", group_keys=False).tail(REVIEWS_PER_RESTAURANT)
+    rev["data_source"] = YELP_SOURCE
+    return chosen[CHOSEN_COLS].reset_index(drop=True), rev[REV_COLS].reset_index(drop=True)
+
+
+def main() -> None:
+    OUT.mkdir(parents=True, exist_ok=True)
+
+    # Assemble every data source into one restaurant table and one review table.
+    # Each source is filtered/sampled independently, then concatenated so the
+    # NYC (Google Local) rows run through the exact same scoring / topic model /
+    # aggregation as the Yelp rows and land in the same processed artifacts.
+    yelp_chosen, yelp_rev = build_yelp()
+    print("Loading NYC (Google Local Reviews) data ...")
+    nyc_chosen, nyc_rev = load_nyc(RAW)
+
+    frames_c = [yelp_chosen] + ([nyc_chosen] if not nyc_chosen.empty else [])
+    frames_r = [yelp_rev] + ([nyc_rev] if not nyc_rev.empty else [])
+    chosen = pd.concat(frames_c, ignore_index=True)
+    rev = pd.concat(frames_r, ignore_index=True)
+
+    # Re-apply the most-recent-N cap uniformly (idempotent for pre-trimmed sources).
+    rev["date"] = pd.to_datetime(rev["date"])
+    rev = rev.sort_values("date").groupby("business_id", group_keys=False).tail(REVIEWS_PER_RESTAURANT)
     rev = rev.reset_index(drop=True)
+    print(f"Selected {len(chosen)} restaurants across {chosen['city'].nunique()} cities / "
+          f"{chosen['state'].nunique()} states / {chosen['data_source'].nunique()} sources.")
     print(f"Scoring {len(rev):,} reviews ...")
 
     # --- Per-review sentiment + aspects + discrepancy -----------------------
@@ -169,8 +205,9 @@ def main() -> None:
             "longitude": float(m["longitude"]),
             "categories": [c.strip() for c in str(m["categories"]).split(",")
                            if c.strip() and c.strip().lower() != "restaurants"][:6],
-            "yelp_stars": float(m["stars"]),
-            "yelp_review_count": int(m["review_count"]),
+            "data_source": m["data_source"],
+            "platform_stars": float(m["stars"]),
+            "platform_review_count": int(m["review_count"]),
             "sampled_reviews": int(len(g)),
             "avg_stars": round(float(g["stars"].mean()), 3),
             "avg_sentiment": round(float(g["sentiment"].mean()), 4),
@@ -190,7 +227,7 @@ def main() -> None:
     # --- Write artifacts ----------------------------------------------------
     keep_cols = ["review_id", "business_id", "date", "stars", "sentiment",
                  "sentiment_label", "discrepancy", "discrepancy_flag", "topic_id",
-                 "useful"] + [f"aspect_{a}" for a in aspects.ASPECTS]
+                 "useful", "data_source"] + [f"aspect_{a}" for a in aspects.ASPECTS]
     rev_out = rev[keep_cols + ["text"]].copy()
     rev_out["text"] = rev_out["text"].str.slice(0, TEXT_TRUNCATE)
     rev_out.to_parquet(OUT / "reviews.parquet", index=False)
@@ -198,10 +235,28 @@ def main() -> None:
     (OUT / "restaurants.json").write_text(json.dumps(restaurants, ensure_ascii=False))
     (OUT / "topics.json").write_text(json.dumps(topic_records, ensure_ascii=False, indent=2))
 
+    source_counts = {s: int((chosen["data_source"] == s).sum())
+                     for s in sorted(chosen["data_source"].unique())}
     meta_out = {
-        "source": "Yelp Open Dataset (via Hugging Face mirrors)",
+        "source": "Yelp Open Dataset + UCSD Google Local Reviews (NYC)",
         "business_source": "yashraizada/yelp-open-dataset-business",
         "review_source": "seansanchez951/yelp_academic_dataset_review",
+        "data_sources": {
+            "yelp_open_dataset": {
+                "label": "Yelp Open Dataset",
+                "provenance": "Yelp Open Dataset via Hugging Face mirrors "
+                              "(yashraizada/yelp-open-dataset-business + "
+                              "seansanchez951/yelp_academic_dataset_review)",
+                "restaurants": source_counts.get(YELP_SOURCE, 0),
+            },
+            "google_local_reviews": {
+                "label": "Google Local Reviews (NYC)",
+                "provenance": "UCSD/McAuley 'Google Local' dataset (2021), "
+                              "New York state slice, filtered to the five boroughs "
+                              "(mcauleylab.ucsd.edu/public_datasets/gdrive/googlelocal)",
+                "restaurants": source_counts.get("google_local_reviews", 0),
+            },
+        },
         "restaurants": len(restaurants),
         "reviews": int(len(rev)),
         "cities": int(chosen["city"].nunique()),
@@ -220,7 +275,7 @@ def main() -> None:
     (OUT / "meta.json").write_text(json.dumps(meta_out, indent=2))
 
     print("\nDone.")
-    print(f"  restaurants : {len(restaurants)}")
+    print(f"  restaurants : {len(restaurants)} ({source_counts})")
     print(f"  reviews     : {len(rev):,}")
     print(f"  cities      : {chosen['city'].nunique()} / states {chosen['state'].nunique()}")
     for f in ["reviews.parquet", "restaurants.json", "topics.json", "meta.json"]:

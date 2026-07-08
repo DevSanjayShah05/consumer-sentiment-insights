@@ -43,13 +43,22 @@ export interface Highlights {
   negative: HighlightQuote[];
 }
 
+export type DataSource = "yelp_open_dataset" | "google_local_reviews";
+
+/** Short, human-readable provenance label for a restaurant's data source. */
+export const DATA_SOURCE_LABELS: Record<string, string> = {
+  yelp_open_dataset: "Yelp Open Dataset",
+  google_local_reviews: "Google Local (NYC)",
+};
+
 export interface RestaurantCardData {
   business_id: string;
   name: string;
   city: string;
   state: string;
   categories: string[];
-  yelp_stars: number;
+  data_source: DataSource;
+  platform_stars: number;
   avg_stars: number;
   avg_sentiment: number;
   pct_positive: number;
@@ -63,7 +72,7 @@ export interface RestaurantDetail extends RestaurantCardData {
   postal_code: string;
   latitude: number;
   longitude: number;
-  yelp_review_count: number;
+  platform_review_count: number;
   first_review: string;
   last_review: string;
   aspects: Record<AspectKey, AspectSummary>;
@@ -125,4 +134,5 @@ export interface FiltersInfo {
   cities: string[];
   states: string[];
   categories: string[];
+  data_sources: string[];
 }

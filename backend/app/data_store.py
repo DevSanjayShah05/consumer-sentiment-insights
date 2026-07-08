@@ -32,6 +32,7 @@ class DataStore:
         for r in self.restaurants:
             cats.update(r["categories"])
         self.categories: List[str] = sorted(cats)
+        self.data_sources: List[str] = sorted({r["data_source"] for r in self.restaurants})
 
     def get(self, business_id: str) -> Optional[dict]:
         return self._by_id.get(business_id)

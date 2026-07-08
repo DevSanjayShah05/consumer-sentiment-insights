@@ -18,8 +18,9 @@ detail, side-by-side comparison, cross-entity aggregation).
 
 ## What it does
 
-- **Restaurant explorer** — card-based browsing across ~360 restaurants, filterable
-  by state, cuisine/category, rating, and by two "discrepancy" lenses: *hidden
+- **Restaurant explorer** — card-based browsing across ~710 restaurants (Yelp
+  cities + all five NYC boroughs), filterable by state, city, cuisine/category,
+  data source, rating, and by two "discrepancy" lenses: *hidden
   gems* (text reads warmer than the star rating) and *overrated* (text reads
   harsher than the star rating).
 - **Restaurant detail** — monthly sentiment trend, a four-aspect sentiment
@@ -36,6 +37,15 @@ so it starts instantly and every request is a cheap in-memory lookup.
 ---
 
 ## Data sources & sampling
+
+Tablecloth draws restaurants from **two** independent, freely-downloadable
+academic review corpora. Every restaurant record carries a `data_source` field
+(`yelp_open_dataset` | `google_local_reviews`) that is surfaced as a badge on the
+card and detail page and is filterable in the explorer — because the two sources
+have different collection methodologies and provenance transparency is the whole
+point of the tool.
+
+### Source 1 — Yelp Open Dataset (most cities)
 
 **Underlying dataset:** the [Yelp Open Dataset](https://www.yelp.com/dataset)
 (academic/non-commercial use), accessed via two directly-downloadable,
@@ -69,20 +79,79 @@ sits inside the ~20k–60k review / few-hundred-restaurant target for a build
 that's tractable to develop against while still being a real, representative
 corpus rather than a synthetic toy.
 
-Raw downloaded Parquet (~2 GB) is **not** committed — it's gitignored
-(`backend/data/raw/`). What *is* committed is the small **derived** dataset the
-app actually reads: `backend/data/processed/` — `reviews.parquet` (scored
-reviews, ~14 MB), `restaurants.json` (per-restaurant aggregates, ~2 MB),
-`topics.json`, and `meta.json`. Total committed data footprint: **~15 MB**.
+### Source 2 — Google Local Reviews (New York City)
+
+The Yelp Open Dataset has **zero New York City coverage** — Yelp never included
+NYC in its public release. To give the app real five-borough coverage, NYC
+restaurants come from a second corpus: the **[UCSD "Google Local" review
+dataset](https://mcauleylab.ucsd.edu/public_datasets/gdrive/googlelocal/)**
+(McAuley Lab, 2021 version), a large, **static academic snapshot** of Google Maps
+business metadata and reviews organised by US state. It is a bulk download, **not
+a live API** — deliberately so: live Yelp/Google Places APIs cap review access at
+3–5 short excerpts per business under their ToS, which makes deep sentiment /
+aspect / topic analysis impossible, whereas this static corpus carries genuine
+long-form review text.
+
+| Artifact | File | What it provides |
+|---|---|---|
+| Business metadata | `meta-New_York.json.gz` (~61 MB) | name, address, lat/lon, category list, Google avg rating & review count |
+| Review text | `review-New_York_10.json.gz` (~1.3 GB, the 10-core subset) | review text, 1–5 rating, timestamp, `gmap_id` |
+
+Joined on `gmap_id`. **Terms:** distributed for academic/research use by the
+McAuley Lab; used here non-commercially as a portfolio piece, the same posture as
+this project's Yelp usage.
+
+**Filtering & sampling** (see `backend/build_nyc_dataset.py`):
+
+1. Metadata filtered to businesses whose Google `category` list contains a
+   `*restaurant*` category **and** whose address resolves to one of the five
+   boroughs — Manhattan (`New York, NY`), Brooklyn, Queens, Bronx, Staten Island
+   (**~22,000** NYC restaurants in the metadata).
+2. The 10-core review file was streamed (never fully loaded into memory) and
+   reviews filtered to those NYC restaurants, keeping only reviews with ≥40 chars.
+3. Same density philosophy as the Yelp slice: restaurants kept only with **≥100
+   reviews**, **capped at 90 per borough** so Manhattan doesn't dominate, then the
+   **350** busiest survivors kept, and the **140 most-recent** reviews per
+   restaurant retained.
+
+**Result:** **350 NYC restaurants**, **49,000 reviews** across all five boroughs
+(real, recognizable places — Katz's Delicatessen, Peter Luger, Eataly, Junior's,
+L&B Spumoni Gardens). These flow through the **identical** VADER / aspect / LDA /
+discrepancy pipeline as the Yelp restaurants — a single shared LDA topic model is
+fit over the **combined** corpus so topic IDs are consistent across both sources —
+and appear naturally in the same Explorer, Detail, and Compare views, tagged with
+a `google_local_reviews` source badge.
+
+**Caveats specific to this source:** Google's `category` labels occasionally tag
+a food-court-bearing mall or casino as a "restaurant", so a handful of non-pure
+restaurants slip in; there are no per-review "useful" votes in Google Local (that
+field is `0` for NYC records); and Google's 1–5 star scale is mapped the same way
+as Yelp's for the discrepancy calculation.
+
+### Combined footprint & provenance transparency
+
+Both sources are merged into one processed dataset; every restaurant record and
+every review carries a `data_source` field, exposed via `/api/filters`, a source
+dropdown in the explorer, and a badge on each card and detail page.
+
+Raw downloads (~2 GB Yelp Parquet + ~1.4 GB NYC JSON.gz) are **not** committed —
+they're gitignored (`backend/data/raw/`). What *is* committed is the small
+**derived** dataset the app reads: `backend/data/processed/` — `reviews.parquet`
+(scored reviews), `restaurants.json` (per-restaurant aggregates), `topics.json`,
+and `meta.json`. Adding NYC roughly doubles the corpus (now ~710 restaurants /
+~99k reviews), so the committed footprint grows accordingly (see the build output
+for exact sizes — on the order of ~30 MB total).
 
 To regenerate the derived data from scratch (optional — not required to run the
 app, since the derived artifacts are already committed):
 
 ```bash
 cd backend
-# download business.parquet + the review shards you want into data/raw/
-# (see the two HF dataset links above)
-python build_dataset.py
+# Yelp: download business.parquet + the review shards you want into data/raw/
+#   (see the two HF dataset links above)
+# NYC:  download meta-New_York.json.gz + review-New_York_10.json.gz into data/raw/
+#   (from the Google Local dataset link above)
+python build_dataset.py   # builds both sources into one merged dataset
 ```
 
 ---
@@ -104,8 +173,9 @@ at request time.
 heuristic, not a trained aspect-based-sentiment model, so it can mis-attribute
 sentences with ambiguous wording; LDA topics are unsupervised and occasionally
 produce a noisy or overlapping label; VADER is lexicon-based and weaker on
-sarcasm and complex negation than a transformer model would be; this is a
-360-restaurant sample of a much larger corpus, not the full Yelp dataset.
+sarcasm and complex negation than a transformer model would be; and this is a
+~710-restaurant sample drawn from two much larger corpora (Yelp Open Dataset +
+UCSD Google Local), not the full extent of either.
 
 ---
 
@@ -115,13 +185,16 @@ sarcasm and complex negation than a transformer model would be; this is a
 backend/
   analysis/            sentiment.py, aspects.py, topics.py, discrepancy.py
                         — the four NLP modules, unit-testable in isolation
-  build_dataset.py      offline pipeline: raw Yelp data -> scored reviews,
-                         per-restaurant aggregates, topic model -> data/processed/
+  build_dataset.py      offline pipeline: merges every source into one scored
+                         corpus + per-restaurant aggregates + shared topic model
+                         -> data/processed/
+  build_nyc_dataset.py   companion loader build_dataset.py calls: filters the
+                          UCSD Google Local NYC corpus to five-borough restaurants
   app/
     data_store.py        loads data/processed/ once at startup
     main.py               FastAPI app + REST routes (read-only, in-memory)
   data/
-    raw/                 gitignored — raw downloaded Yelp Parquet
+    raw/                 gitignored — raw Yelp Parquet + NYC Google Local JSON.gz
     processed/            committed — the small derived dataset the API serves
 
 frontend/
@@ -200,5 +273,10 @@ after running the app locally — none are committed yet._
   choosing.
 - Aspect and topic models are heuristic/unsupervised; a fine-tuned ABSA model
   or a supervised topic taxonomy would sharpen both.
-- Only a 360-restaurant sample is included; the pipeline generalizes to more
-  shards of the same corpus if a larger sample is wanted later.
+- Only a ~710-restaurant sample is included (Yelp cities + NYC); the pipeline
+  generalizes to more shards / more states of either corpus if a larger sample is
+  wanted later.
+- The two sources have different provenance and methodology (Yelp vs. Google
+  Local); each restaurant is tagged with its `data_source` so cross-source
+  comparisons stay honest, but raw star scales and review-collection biases differ
+  between platforms.

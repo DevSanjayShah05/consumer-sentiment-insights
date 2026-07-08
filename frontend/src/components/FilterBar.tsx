@@ -1,4 +1,4 @@
-import type { FiltersInfo } from "../api/types";
+import { DATA_SOURCE_LABELS, type FiltersInfo } from "../api/types";
 import type { RestaurantListParams } from "../api/client";
 
 interface Props {
@@ -28,6 +28,16 @@ export function FilterBar({ filters, value, onChange, total }: Props) {
         <option value="">All cuisines</option>
         {filters?.categories.map((c) => (
           <option key={c} value={c}>{c}</option>
+        ))}
+      </select>
+
+      <select
+        value={value.data_source ?? ""}
+        onChange={(e) => onChange({ ...value, data_source: e.target.value || undefined })}
+      >
+        <option value="">All sources</option>
+        {filters?.data_sources.map((s) => (
+          <option key={s} value={s}>{DATA_SOURCE_LABELS[s] ?? s}</option>
         ))}
       </select>
 

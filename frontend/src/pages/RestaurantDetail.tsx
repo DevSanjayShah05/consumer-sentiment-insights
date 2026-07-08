@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
-import type { RestaurantDetail as RestaurantDetailType } from "../api/types";
+import { DATA_SOURCE_LABELS, type RestaurantDetail as RestaurantDetailType } from "../api/types";
 import { AspectBars } from "../components/AspectBars";
 import { PullQuote } from "../components/PullQuote";
 import { TopicChips } from "../components/TopicChips";
@@ -47,6 +47,9 @@ export function RestaurantDetail() {
           <div>
             <div className="eyebrow">{r.city}, {r.state} · {r.categories.slice(0, 4).join(" · ")}</div>
             <h1>{r.name}</h1>
+            <span className={`source-badge ${r.data_source}`} style={{ marginTop: 10 }}>
+              {DATA_SOURCE_LABELS[r.data_source] ?? r.data_source}
+            </span>
           </div>
           <Link to={`/compare?a=${r.business_id}`} className="btn secondary">Compare this restaurant</Link>
         </div>
@@ -56,7 +59,9 @@ export function RestaurantDetail() {
         <div className="kpi-tile">
           <div className="eyebrow">Avg. rating</div>
           <div className="value">{r.avg_stars.toFixed(2)}★</div>
-          <div className="sub">Yelp baseline {r.yelp_stars}★</div>
+          <div className="sub">
+            {r.data_source === "google_local_reviews" ? "Google" : "Yelp"} baseline {r.platform_stars}★
+          </div>
         </div>
         <div className="kpi-tile">
           <div className="eyebrow">Computed sentiment</div>

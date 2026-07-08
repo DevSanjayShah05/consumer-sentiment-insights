@@ -263,6 +263,33 @@
   color: var(--div-cool);
 }
 
+/* Data provenance badge — which source a restaurant's reviews came from. */
+.source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--page);
+  border: 1px solid var(--hairline);
+  color: var(--ink-secondary);
+  white-space: nowrap;
+}
+
+.source-badge::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ink-muted);
+}
+
+.source-badge.yelp_open_dataset::before { background: var(--aspect-food); }
+.source-badge.google_local_reviews::before { background: var(--aspect-price); }
+
 /* ===================== KPI row ===================== */
 
 .kpi-row {

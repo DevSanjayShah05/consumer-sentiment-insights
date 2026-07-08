@@ -1,11 +1,23 @@
 {
-  "source": "Yelp Open Dataset (via Hugging Face mirrors)",
+  "source": "Yelp Open Dataset + UCSD Google Local Reviews (NYC)",
   "business_source": "yashraizada/yelp-open-dataset-business",
   "review_source": "seansanchez951/yelp_academic_dataset_review",
-  "restaurants": 360,
-  "reviews": 50400,
-  "cities": 82,
-  "states": 14,
+  "data_sources": {
+    "yelp_open_dataset": {
+      "label": "Yelp Open Dataset",
+      "provenance": "Yelp Open Dataset via Hugging Face mirrors (yashraizada/yelp-open-dataset-business + seansanchez951/yelp_academic_dataset_review)",
+      "restaurants": 360
+    },
+    "google_local_reviews": {
+      "label": "Google Local Reviews (NYC)",
+      "provenance": "UCSD/McAuley 'Google Local' dataset (2021), New York state slice, filtered to the five boroughs (mcauleylab.ucsd.edu/public_datasets/gdrive/googlelocal)",
+      "restaurants": 350
+    }
+  },
+  "restaurants": 710,
+  "reviews": 99400,
+  "cities": 87,
+  "states": 15,
   "date_range": [
     "2015-09-10",
     "2022-01-19"

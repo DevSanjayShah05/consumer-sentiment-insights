@@ -50,7 +50,8 @@ def _card(r: dict) -> dict:
         "city": r["city"],
         "state": r["state"],
         "categories": r["categories"],
-        "yelp_stars": r["yelp_stars"],
+        "data_source": r["data_source"],
+        "platform_stars": r["platform_stars"],
         "avg_stars": r["avg_stars"],
         "avg_sentiment": r["avg_sentiment"],
         "pct_positive": r["pct_positive"],
@@ -71,7 +72,8 @@ def get_meta():
 def get_filters():
     """Distinct cities/states/categories for building UI filter controls."""
     store = get_store()
-    return {"cities": store.cities, "states": store.states, "categories": store.categories}
+    return {"cities": store.cities, "states": store.states,
+            "categories": store.categories, "data_sources": store.data_sources}
 
 
 @app.get("/api/topics")
@@ -85,6 +87,7 @@ def list_restaurants(
     city: Optional[str] = None,
     state: Optional[str] = None,
     category: Optional[str] = None,
+    data_source: Optional[str] = None,
     min_stars: Optional[float] = Query(None, ge=1, le=5),
     min_sentiment: Optional[float] = Query(None, ge=-1, le=1),
     discrepancy: Optional[str] = Query(
@@ -105,6 +108,8 @@ def list_restaurants(
         rows = [r for r in rows if r["state"].lower() == state.lower()]
     if category:
         rows = [r for r in rows if any(category.lower() == c.lower() for c in r["categories"])]
+    if data_source:
+        rows = [r for r in rows if r["data_source"] == data_source]
     if min_stars is not None:
         rows = [r for r in rows if r["avg_stars"] >= min_stars]
     if min_sentiment is not None:

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import type { RestaurantCardData } from "../api/types";
+import { DATA_SOURCE_LABELS, type RestaurantCardData } from "../api/types";
 
 interface Props {
   restaurant: RestaurantCardData;
@@ -33,6 +33,10 @@ export function RestaurantCard({ restaurant: r }: Props) {
         </div>
       </div>
 
+      <span className={`source-badge ${r.data_source}`}>
+        {DATA_SOURCE_LABELS[r.data_source] ?? r.data_source}
+      </span>
+
       <div className="r-card__categories">
         {r.categories.slice(0, 3).map((c) => (
           <span className="tag" key={c}>{c}</span>
@@ -61,7 +65,9 @@ export function RestaurantCard({ restaurant: r }: Props) {
       )}
 
       <div className="r-card__footer">
-        <span style={{ fontSize: 12, color: "var(--ink-muted)" }}>Yelp {r.yelp_stars}★ baseline</span>
+        <span style={{ fontSize: 12, color: "var(--ink-muted)" }}>
+          {r.data_source === "google_local_reviews" ? "Google" : "Yelp"} {r.platform_stars}★ baseline
+        </span>
         {badge && <span className={`discrepancy-note ${badge.tone}`}>{badge.label}</span>}
       </div>
     </article>

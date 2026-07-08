@@ -30,6 +30,7 @@ export interface RestaurantListParams {
   city?: string;
   state?: string;
   category?: string;
+  data_source?: string;
   min_stars?: number;
   min_sentiment?: number;
   discrepancy?: string;
